@@ -5,29 +5,72 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
+def _calc_row_col(ind, row_size):
+    return \
+        (ind // row_size) + 1, \
+        (ind % row_size) + 1
+
 def plot(
         data: List[Dict[str, np.ndarray]],
         plot_titles: List[str],
         x_titles: List[str],
-        y_titles: List[str]
+        y_titles: List[str],
+        histogram_data: List[np.ndarray] = None,
+        histogram_titles: List[str] = None,
 ):
+    num_rows = 2
+    row_size = len(data) // num_rows + 1
     fig = make_subplots(
-        rows=len(data),
-        cols=1,
+        rows=num_rows,
+        cols=row_size,
         subplot_titles=plot_titles
     )
     for plot_ind, one_plot_data in enumerate(data):
+        plot_row, plot_col = _calc_row_col(plot_ind, row_size)
         for name, values in one_plot_data.items():
             fig.add_trace(go.Scatter(
                 y=values,
                 mode='lines',
                 name=name
-            ), row=plot_ind + 1, col=1)
+            ), row=plot_row, col=plot_col)
 
     for title_ind, title in enumerate(x_titles):
-        fig.update_xaxes(title_text=title, row=title_ind + 1, col=1)
+        title_row, title_col = _calc_row_col(title_ind, row_size)
+        fig.update_xaxes(title_text=title, row=title_row, col=title_col)
 
     for title_ind, title in enumerate(y_titles):
-        fig.update_yaxes(title_text=title, row=title_ind + 1, col=1)
+        title_row, title_col = _calc_row_col(title_ind, row_size)
+        fig.update_yaxes(title_text=title, row=title_row, col=title_col)
+
+    if histogram_data is not None:
+        for hist_data, hist_title in zip(histogram_data, histogram_titles):
+            fig.add_trace(go.Histogram(
+                x=hist_data,
+            ), row=num_rows, col=row_size)
 
     fig.show()
+
+
+def plot_histogram(data1, data2):
+    # import plotly.express as px
+    # data1 = np.arange(0, 1, 0.1)
+    # data2 = np.arange(0, 1, 0.2)
+    # data1 = np.random.normal(0, 1, size=10000)
+    # data2 = np.random.normal(0, 4, size=10000)
+    # fig = px.histogram(df, x="total_bill")
+    # fig.show()
+
+    fig = go.Figure(go.Histogram(
+        x=data1,
+    ))
+
+    fig.add_trace(go.Histogram(
+        x=data2,
+    ))
+
+    # fig.update_layout(
+    #     barmode="overlay",
+    #     bargap=0.1)
+
+    fig.show()
+

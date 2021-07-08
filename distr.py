@@ -109,27 +109,26 @@ class GaussianMixtureDist(BaseDist):
 # https://github.com/karpathy/pytorch-normalizing-flows
 class RealNVP(BaseDist):
 
-    def __init__(self):
+    def __init__(
+            self,
+            dim: int,
+            num_transforms: int = 9,
+    ):
         super().__init__()
-        prior = dist.TransformedDistribution(dist.Uniform(t.zeros(1), t.ones(1)), dist.SigmoidTransform().inv)
-        flows = [AffineHalfFlow(dim=1, parity=i % 2) for i in range(9)]
+        prior = dist.TransformedDistribution(dist.Uniform(t.zeros(dim), t.ones(dim)), dist.SigmoidTransform().inv)
+        flows = [AffineHalfFlow(dim=dim, parity=i % 2) for i in range(num_transforms)]
         self._model = NormalizingFlowModel(prior, flows)
 
     def __call__(self, batch_shape: t.Size):
-        return self._dist.sample(batch_shape)
+        return self._model.sample(batch_shape)
 
-    @property
-    def dist(self) -> t.distributions.Distribution:
-        return self._dist
+    # @property
+    # def dist(self) -> t.distributions.Distribution:
+    #     return self._dist
 
     def get_annotated_params(self) -> Dict[str, float]:
-        return {
-            'mu': self._mu[0].item(),
-            'sigma': self._sigma[0].item(),
-            'mu2': self._mu[1].item(),
-            'sigma2': self._sigma[1].item()
-        }
+        return {}
 
     @property
     def name(self) -> str:
-        return 'gaussian mixture'
+        return 'real nvp'
