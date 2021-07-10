@@ -42,7 +42,7 @@ class DistMSEOptimizer(DistrOptimizer):
 class DistLogPOptimizer(DistrOptimizer):
 
     def loss(self, batch: t.Tensor):
-        logp = self._distr.dist.log_prob(batch)
+        logp = self._distr.log_prob(batch)
         loss = -logp.mean()
 
         log_data = {

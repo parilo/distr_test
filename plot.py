@@ -10,6 +10,7 @@ def _calc_row_col(ind, row_size):
         (ind // row_size) + 1, \
         (ind % row_size) + 1
 
+
 def plot(
         data: List[Dict[str, np.ndarray]],
         plot_titles: List[str],
@@ -44,22 +45,19 @@ def plot(
 
     if histogram_data is not None:
         for hist_data, hist_title in zip(histogram_data, histogram_titles):
-            fig.add_trace(go.Histogram(
-                x=hist_data,
-            ), row=num_rows, col=row_size)
+            fig.add_trace(
+                go.Histogram(
+                    x=hist_data,
+                    name=hist_title,
+                ),
+                row=num_rows,
+                col=row_size,
+            )
 
     fig.show()
 
 
 def plot_histogram(data1, data2):
-    # import plotly.express as px
-    # data1 = np.arange(0, 1, 0.1)
-    # data2 = np.arange(0, 1, 0.2)
-    # data1 = np.random.normal(0, 1, size=10000)
-    # data2 = np.random.normal(0, 4, size=10000)
-    # fig = px.histogram(df, x="total_bill")
-    # fig.show()
-
     fig = go.Figure(go.Histogram(
         x=data1,
     ))
@@ -67,10 +65,6 @@ def plot_histogram(data1, data2):
     fig.add_trace(go.Histogram(
         x=data2,
     ))
-
-    # fig.update_layout(
-    #     barmode="overlay",
-    #     bargap=0.1)
 
     fig.show()
 

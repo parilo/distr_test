@@ -29,11 +29,12 @@ def test_distr_learning(
         dst_distr: BaseDist,
         distr_optimizer: DistrOptimizer,
         train_steps: int,
+        src_dist_dim: int = 1,
 ):
     logger = ValueLogger()
 
     for st_ind in range(train_steps):
-        batch = src_distr((64,))
+        batch = src_distr((64, src_dist_dim))
         log_data = distr_optimizer.train_step(batch)
         logger.log(st_ind, log_data, src_distr, dst_distr)
 
@@ -222,10 +223,73 @@ def test_src_real_nvp_dst_real_nvp_logp(args):
     src_dist = RealNVP(dim=2)
     dst_dist = RealNVP(dim=2)
 
-    data1 = src_dist(10000)[-1].detach().numpy()[:, 0]
-    data2 = dst_dist(10000)[-1].detach().numpy()[:, 0]
+    dist_optimizer = DistLogPOptimizer(dst_dist)
+    logger = test_distr_learning(
+        src_distr=src_dist,
+        dst_distr=dst_dist,
+        distr_optimizer=dist_optimizer,
+        train_steps=args.train_steps
+    )
 
-    plot_histogram(data1, data2)
+    src_samples = src_dist((10000,)).detach().numpy()[:, 0]
+    dst_samples = dst_dist((10000,)).detach().numpy()[:, 0]
+
+    plot(
+        *logger.get_plot_data({
+            'Loss': ['logp_loss'],
+            'Mu': [
+                'src gaussian mixture mu',
+                'src gaussian mixture mu2',
+                'dst gaussian mixture mu',
+                'dst gaussian mixture mu2',
+            ],
+            'Sigma': [
+                'src gaussian mixture sigma',
+                'src gaussian mixture sigma2',
+                'dst gaussian mixture sigma',
+                'dst gaussian mixture sigma2',
+            ]
+        }),
+        histogram_data=[src_samples, dst_samples],
+        histogram_titles=['src real nvp dist', 'dst real nvp dist'],
+    )
+
+
+def test_src_gmm_dst_real_nvp_logp(args):
+    src_dist = GaussianMixtureDist([-4, 2, 10, 16], [1.2, 1, 0.8, 1.5])
+    dst_dist = RealNVP(dim=2, hidden_layer_size=8)
+
+    dist_optimizer = DistLogPOptimizer(dst_dist)
+    logger = test_distr_learning(
+        src_distr=src_dist,
+        dst_distr=dst_dist,
+        distr_optimizer=dist_optimizer,
+        train_steps=args.train_steps,
+        src_dist_dim=2,
+    )
+
+    src_samples = src_dist((10000,)).detach().numpy()
+    dst_samples = dst_dist((10000,)).detach().numpy()[:, 0]
+
+    plot(
+        *logger.get_plot_data({
+            'Loss': ['logp_loss'],
+            'Mu': [
+                'src gaussian mixture mu',
+                'src gaussian mixture mu2',
+                'dst gaussian mixture mu',
+                'dst gaussian mixture mu2',
+            ],
+            'Sigma': [
+                'src gaussian mixture sigma',
+                'src gaussian mixture sigma2',
+                'dst gaussian mixture sigma',
+                'dst gaussian mixture sigma2',
+            ]
+        }),
+        histogram_data=[src_samples, dst_samples],
+        histogram_titles=['src gmm dist', 'dst real nvp dist'],
+    )
 
 
 def main():
@@ -240,7 +304,8 @@ def main():
     # test_src_gmm_dst_normal_logp(args)
     # test_src_normal_dst_gmm_logp(args)
     # test_src_gmm_dst_gmm_logp(args)
-    test_src_real_nvp_dst_real_nvp_logp(args)
+    test_src_gmm_dst_real_nvp_logp(args)
+    # test_src_real_nvp_dst_real_nvp_logp(args)
 
 
 # Press the green button in the gutter to run the script.
