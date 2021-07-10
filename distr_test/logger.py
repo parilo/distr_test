@@ -3,7 +3,7 @@ from typing import Dict, Tuple, List, Optional
 
 import numpy as np
 
-from distr import BaseDist
+from distr_test.distr import BaseDist
 
 
 class ValueLogger:
